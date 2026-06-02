@@ -5,16 +5,19 @@ import sys
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, ROOT_DIR)
 
-# Handle case-sensitivity mismatch on Linux/Render dynamically
-try:
-    for name in os.listdir(ROOT_DIR):
-        if name.lower() == "backend" and name != "backend":
-            import importlib
-            backend_mod = importlib.import_module(name)
-            sys.modules["backend"] = backend_mod
-            break
-except Exception:
-    pass
+# Dynamically resolve case-sensitivity mismatches on Linux/Render
+for target in ["backend", "frontend"]:
+    try:
+        for name in os.listdir(ROOT_DIR):
+            if name.lower() == target and name != target:
+                old_path = os.path.join(ROOT_DIR, name)
+                new_path = os.path.join(ROOT_DIR, target)
+                os.rename(old_path, new_path)
+                print(f"Dynamically renamed {old_path} to {new_path} to resolve case-sensitivity.")
+                break
+    except Exception as e:
+        print(f"Error handling case-sensitivity for {target}: {e}")
+
 
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
